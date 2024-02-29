@@ -1,7 +1,7 @@
 name: HTTP Triggered Workflow
 
 on:
-  repository_dispatch:
+  workflow_dispatch:
     types: [http-trigger]
 
 jobs:
