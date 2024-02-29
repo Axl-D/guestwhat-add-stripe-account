@@ -2,7 +2,11 @@ name: HTTP Triggered Workflow
 
 on:
   workflow_dispatch:
-    types: [http-trigger]
+    inputs:
+      submission:
+        description: 'Submission data from Tally.so'
+        required: true
+        default: '{}'
 
 jobs:
   handleRequest:
