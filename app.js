@@ -91,20 +91,28 @@ async function handleRequest(req, res) {
 
 // HTTP server setup
 
-import http from "http";
-const port = process.env.PORT || 5500;
+// import http from "http";
+// const port = process.env.PORT || 5500;
 
-const server = http.createServer(async (req, res) => {
-  if (req.method === "POST") {
-    await handleRequest(req, res);
-  } else {
-    res.statusCode = 405;
-    res.setHeader("Allow", "POST");
-    res.end();
-  }
-  ``;
-});
+// const server = http.createServer(async (req, res) => {
+//   if (req.method === "POST") {
+//     await handleRequest(req, res);
+//   } else {
+//     res.statusCode = 405;
+//     res.setHeader("Allow", "POST");
+//     res.end();
+//   }
+//   ``;
+// });
 
-server.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+// server.listen(port, () => {
+//   console.log(`Server running on port ${port}`);
+// });
+
+const submission = process.env.INPUT_SUBMISSION;
+
+// Parse the submission data if needed
+const submissionData = JSON.parse(submission);
+
+// Call the handleRequest function and pass the submission data
+await handleRequest(submissionData);
