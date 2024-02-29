@@ -110,6 +110,7 @@ async function handleRequest(req, res) {
 // });
 
 const submission = process.env.INPUT_SUBMISSION;
+console.log('submission', submission);
 
 // Parse the submission data if needed
 const submissionData = JSON.parse(submission);
