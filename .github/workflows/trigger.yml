@@ -27,5 +27,5 @@ jobs:
       - name: Run app.js
         run: node app.js
         env:
-          CHANNEL_ID: ${{ secrets.STRIPE_PUBLIC_KEY }}
-          BOT_TOKEN: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_PUBLIC_KEY: ${{ secrets.STRIPE_PUBLIC_KEY }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
