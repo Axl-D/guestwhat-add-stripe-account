@@ -60,60 +60,21 @@ async function processData(fields) {
   }
 }
 
-async function handleRequest(req, res) {
-  try {
-    let body = "";
+import express from 'express';
+const app = express();
+const port = 3000; // Choose your desired port
 
-    req.on("data", (chunk) => {
-      body += chunk;
-    });
+// Middleware to parse JSON data
+app.use(express.json());
 
-    req.on("end", async () => {
-      try {
-        body = JSON.parse(body);
-        // console.log("Received data");
+// Endpoint to receive data from Postman
+app.post('/submit', (req, res) => {
+  const submission = req.body; // Access data sent from Postman
+  // console.log('Received submission:', JSON.stringify(submission.data.fields));
+  // res.send('Data received successfully!');
+    processData(submission.data.fields);
+})
 
-        await processData(body.data.fields);
-        res.writeHead(200, { "Content-Type": "text/plain" });
-        res.end("Data processed successfully");
-      } catch (error) {
-        console.error("Error processing data:", error);
-        res.writeHead(500, { "Content-Type": "text/plain" });
-        res.end("Internal server error");
-      }
-    });
-  } catch (error) {
-    console.error("Error handling request:", error);
-    res.writeHead(500, { "Content-Type": "text/plain" });
-    res.end("Internal server error");
-  }
-}
-
-// HTTP server setup
-
-// import http from "http";
-// const port = process.env.PORT || 5500;
-
-// const server = http.createServer(async (req, res) => {
-//   if (req.method === "POST") {
-//     await handleRequest(req, res);
-//   } else {
-//     res.statusCode = 405;
-//     res.setHeader("Allow", "POST");
-//     res.end();
-//   }
-//   ``;
-// });
-
-// server.listen(port, () => {
-//   console.log(`Server running on port ${port}`);
-// });
-
-const submission = process.env.INPUT_SUBMISSION;
-console.log('submission', submission);
-
-// Parse the submission data if needed
-const submissionData = JSON.parse(submission);
-
-// Call the handleRequest function and pass the submission data
-await handleRequest(submissionData);
+app.listen(port, () => {
+  console.log(`App listening at http://localhost:${port}`);
+})
