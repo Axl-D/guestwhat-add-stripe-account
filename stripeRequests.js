@@ -124,7 +124,7 @@ export async function generateUpdateToken() {
   return tokenData;
 }
 
-export async function updateAccount(accountId, tokenId) {
+export async function updateAccount(accountId, name, tokenId) {
   try {
     const response = await fetch(`https://api.stripe.com/v1/accounts/${accountId}`, {
       method: "POST",
@@ -134,10 +134,12 @@ export async function updateAccount(accountId, tokenId) {
       },
       body: new URLSearchParams({
         account_token: tokenId,
+        "settings[payments][statement_descriptor]":name
       }),
     });
 
     const accountData = await response.json();
+    console.log("updateAccount succeeded");
     return accountData;
   } catch (error) {
     console.error("Error updating custom account:", error);
