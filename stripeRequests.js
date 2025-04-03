@@ -5,7 +5,29 @@ if (!process.env.GITHUB_ACTIONS) {
 }
 
 // Function to generate a token
-export async function generateToken(name, business_type, country, city, postal_code, address_street, siret, phone, vat_id) {
+export async function generateToken(
+  name,
+  business_type,
+  country,
+  city,
+  postal_code,
+  address_street,
+  siret,
+  phone,
+  vat_id
+) {
+  console.log("Generating Stripe token for organization:", {
+    name,
+    business_type,
+    country,
+    city,
+    postal_code,
+    address_street,
+    siret,
+    phone,
+    vat_id,
+  });
+
   const response = await fetch("https://api.stripe.com/v1/tokens", {
     method: "POST",
     headers: {
@@ -28,15 +50,22 @@ export async function generateToken(name, business_type, country, city, postal_c
 
   const tokenData = await response.json();
   if (tokenData.error) {
-    console.error(tokenData.error);
+    console.error("Token generation failed:", tokenData.error);
     throw new Error("Stripe generateToken error");
   }
-  console.log("generateToken succeeded");
+  console.log("Token generated successfully:", tokenData.id);
   return tokenData;
 }
 
 // Function to create a custom account
 export async function createCustomAccount(tokenId, mcc, description, website) {
+  console.log("Creating Stripe custom account with:", {
+    tokenId,
+    mcc,
+    description,
+    website,
+  });
+
   const response = await fetch("https://api.stripe.com/v1/accounts", {
     method: "POST",
     headers: {
@@ -52,20 +81,45 @@ export async function createCustomAccount(tokenId, mcc, description, website) {
       "business_profile[mcc]": mcc,
       "business_profile[product_description]": description,
       "business_profile[url]": website,
+      "settings[payouts][schedule][interval]": "manual",
     }),
   });
 
   const accountData = await response.json();
 
   if (accountData.error) {
-    console.error(accountData.error);
+    console.error("Account creation failed:", accountData.error);
     throw new Error("Stripe createCustomAccount error");
   }
-  console.log(`createCustomAccount succeeded id: ${accountData.id}`);
+  console.log(`Custom account created successfully: ${accountData.id}`);
+  console.log("Account details:", {
+    type: accountData.type,
+    country: accountData.country,
+    capabilities: accountData.capabilities,
+    business_profile: accountData.business_profile,
+    payouts_enabled: accountData.payouts_enabled,
+    payouts_schedule: accountData.settings?.payouts?.schedule,
+  });
   return accountData;
 }
 
 export async function addPersonToAccount(accountId, person, fileId) {
+  console.log("Adding person to account:", {
+    accountId,
+    person: {
+      first_name: person.first_name,
+      last_name: person.last_name,
+      title: person.title,
+      email: person.email,
+      phone: person.phone,
+      dob: `${person.dobYear}-${person.dobMonth}-${person.dobDay}`,
+      city: person.city,
+      postal_code: person.postal_code,
+      address_street: person.address_street,
+    },
+    fileId,
+  });
+
   const response = await fetch(`https://api.stripe.com/v1/accounts/${accountId}/persons`, {
     method: "POST",
     headers: {
@@ -93,15 +147,17 @@ export async function addPersonToAccount(accountId, person, fileId) {
   const personData = await response.json();
 
   if (personData.error) {
-    console.error(personData.error);
+    console.error("Person addition failed:", personData.error);
     throw new Error("Stripe addPersonToAccount error");
   }
-  console.log("addPersonToAccount succeeded");
+  console.log("Person added successfully:", personData.id);
   return personData;
 }
 
 //Create new token to update Account and specify that all persons have been added.
 export async function generateUpdateToken() {
+  console.log("Generating update token for account verification");
+
   const response = await fetch("https://api.stripe.com/v1/tokens", {
     method: "POST",
     headers: {
@@ -117,14 +173,20 @@ export async function generateUpdateToken() {
 
   const tokenData = await response.json();
   if (tokenData.error) {
-    console.error(tokenData.error);
+    console.error("Update token generation failed:", tokenData.error);
     throw new Error("Stripe generateUpdateToken error");
   }
-  console.log("generateUpdateToken succeeded");
+  console.log("Update token generated successfully:", tokenData.id);
   return tokenData;
 }
 
 export async function updateAccount(accountId, name, tokenId) {
+  console.log("Updating account:", {
+    accountId,
+    name,
+    tokenId,
+  });
+
   try {
     const response = await fetch(`https://api.stripe.com/v1/accounts/${accountId}`, {
       method: "POST",
@@ -134,21 +196,27 @@ export async function updateAccount(accountId, name, tokenId) {
       },
       body: new URLSearchParams({
         account_token: tokenId,
-        "settings[payments][statement_descriptor]":name
+        "settings[payments][statement_descriptor]": name,
       }),
     });
 
     const accountData = await response.json();
-    console.log("updateAccount succeeded");
+    console.log("Account updated successfully:", accountData.id);
     return accountData;
   } catch (error) {
-    console.error("Error updating custom account:", error);
+    console.error("Error updating account:", error);
     throw new Error("Could not update custom account");
   }
 }
 
 //Add a bank account to the account
 export async function addBankAccount(accountId, iban, country) {
+  console.log("Adding bank account:", {
+    accountId,
+    iban,
+    country,
+  });
+
   const response = await fetch(`https://api.stripe.com/v1/accounts/${accountId}/external_accounts`, {
     method: "POST",
     headers: {
@@ -165,14 +233,16 @@ export async function addBankAccount(accountId, iban, country) {
 
   const bankAccountData = await response.json();
   if (bankAccountData.error) {
-    console.error(bankAccountData.error);
+    console.error("Bank account addition failed:", bankAccountData.error);
     throw new Error("Stripe addBankAccount error");
   }
-  console.log("addBankAccount succeeded");
+  console.log("Bank account added successfully:", bankAccountData.id);
   return bankAccountData;
 }
 
 export async function uploadIdDocument(url) {
+  console.log("Uploading ID document from URL:", url);
+
   const fetchResponse = await fetch(url);
   const fileBuffer = await fetchResponse.arrayBuffer();
   const blob = new Blob([fileBuffer], { type: "application/octet-stream" });
@@ -189,11 +259,11 @@ export async function uploadIdDocument(url) {
     body: formData,
   });
 
-  const response = await stripeResponse.json();
-  if (response.error) {
-    console.error(response.error);
+  const fileData = await stripeResponse.json();
+  if (fileData.error) {
+    console.error("ID document upload failed:", fileData.error);
     throw new Error("Stripe uploadIdDocument error");
   }
-  console.log("uploadIdDocument succeeded");
-  return response;
+  console.log("ID document uploaded successfully:", fileData.id);
+  return fileData;
 }
